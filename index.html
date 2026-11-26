@@ -9524,6 +9524,7 @@ procesarPrograma = function(workbook) {
   const iOrden = encontrarCol(hn, ['ORDEN T','ORDEN','ORDER','ORDER CODE','OC']);
   const iOrderCode = encontrarCol(hn, ['ORDER CODE','ORDEN','ORDER','OC']);
   const iProceso = encontrarCol(hn, ['PROCESO','PROCESS','ROW NAME','ROWNAME','LINEA','LÍNEA','MODULO','MÓDULO']);
+  const iPrograma = hn.indexOf('PROGRAMA');
   const iSemanaTxt = encontrarCol(hn, ['SEMANA TROQUEL','WEEK TROQUEL','SEMANA','WEEK','SEMANA ISO','ISO WEEK']);
   const iFecha = encontrarCol(hn, ['INICIO CORTE','INICIO TROQUEL','FECHA INICIO TROQUEL','ATRAQUE','DATE ON PLAN DAY','PLAN DAY','FECHA PRODUCCION','FECHA PRODUCCIÓN','FECHA']);
   const iQty   = encontrarCol(hn, ['CANTIDAD PASADORES','PLANNED QTY','PLAN','QUANTITY ON PLAN DAY','QTY ON PLAN DAY','CANTIDAD','QUANTITY','QTY']);
@@ -9533,8 +9534,8 @@ procesarPrograma = function(workbook) {
   const iCant    = encontrarCol(hn, ['REQUERIDO','TOTAL DE ORDEN','TOTAL ORDEN','CANTIDAD ORDEN','CANT. ORDEN','ORDER QTY','QTY ORDER','TOTAL ORDER','PLANNED QTY']);
 
   if (iProceso < 0) throw new Error('El archivo PASADORES debe incluir columna Row name o Proceso.');
-  if (iOrden < 0 || iEstilo < 0 || iQty < 0 || iSemanaTxt < 0) {
-    throw new Error('El archivo PASADORES debe incluir columnas Orden, Estilo, Cantidad Pasadores y Semana.');
+  if (iOrden < 0 || iEstilo < 0 || iQty < 0 || (iPrograma < 0 && iSemanaTxt < 0)) {
+    throw new Error('El archivo PASADORES debe incluir columnas Orden, Estilo, Cantidad Pasadores y Programa o Semana.');
   }
 
   const semanasValidas = mod8ConfigurarSemanasDetectadas();
@@ -9546,8 +9547,9 @@ procesarPrograma = function(workbook) {
     if (!fila || fila.every(c => c === null || c === undefined || c === '')) continue;
 
     const d = mod8ParseFecha(iFecha >= 0 ? fila[iFecha] : null);
-    let semana = iSemanaTxt >= 0 ? mod8SemanaDesdeTexto(fila[iSemanaTxt]) : null;
-    if (!semana && d) semana = mod8ISOWeekYearFinal(d).week;
+    const valorSemana = fila[iPrograma >= 0 ? iPrograma : iSemanaTxt];
+    let semana = mod8SemanaDesdeTexto(valorSemana);
+    if (iPrograma < 0 && !semana && d) semana = mod8ISOWeekYearFinal(d).week;
     if (!semana) { sinSemana++; continue; }
     const semanaActualISO = mod8ISOWeekYearFinal(new Date()).week;
     if (Number(semana) === Number(semanaActualISO)) { fueraSemana++; continue; }
